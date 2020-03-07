@@ -18,51 +18,63 @@ class Quest:
         self.summary = "==Summary==\n" + text + "\n\n"
 
     def requirements(self, data):
-        print(data)
         for req in data:
             if req["T"] == "MinFavorLevel":
-                self.prereq += " The quest is available at {{Favor|%s}} favor." % Favor.get_alias(req["Level"])
+                self.prereq += "The quest is available at {{Favor|%s}} favor. " % Favor.get_alias(req["Level"])
             elif req["T"] == "MinSkillLevel":
-                self.prereq += " This quest is available at [[%s]] level %s." % (Skill.get_alias(req["Skill"]), req["Level"])
+                self.prereq += "This quest is available at [[%s]] level %s. " % (Skill.get_alias(req["Skill"]), req["Level"])
             elif req["T"] == "QuestCompleted":
                 other_quest_name = QuestList.find_quest_by_internalname(req["Quest"])["Name"]
-                self.prereq += " You must have previously completed [[%s]] in order to undertake this quest." % other_quest_name
+                self.prereq += "You must have previously completed [[%s]] in order to undertake this quest. " % other_quest_name
             elif req["T"] == "HasEffectKeyword" and req["Keyword"] == "LiveEvent_Crafting":
-                self.prereq += " This quest is only available during a Crafting Caravan event."
+                self.prereq += "This quest is only available during a Crafting Caravan event. "
+            elif req["T"] == "HasEffectKeyword" and req["Keyword"] == "LiveEvent_CivilService":
+                self.prereq += "This quest is only available during a Civil Service event. "
+            elif req["T"] == "HasEffectKeyword" and req["Keyword"] == "LiveEvent_BunFu":
+                self.prereq += "This quest is only available during a BunFu event. "
             elif req["T"] == "IsWarden":
-                self.prereq += " This quest is only available for Wardens."
+                self.prereq += "This quest is only available for Wardens. "
             elif req["T"] == "AreaEventOn":
-                self.prereq += " This quest is only available during an event in the area."
+                self.prereq += "This quest is only available during an event in the area. "
                 # check req["AreaEvent"]
             elif req["T"] == "HangOutCompleted":
-                self.prereq += " This quest is only available after completing a hangout."
+                self.prereq += "This quest is only available after completing a hangout. "
                 # check req["HangOut"]
             elif req["T"] == "InteractionFlagSet":
                 # check req["InteractionFlag"]
-                self.prereq += " This quest is only available after an interaction."
+                self.prereq += "This quest is only available after an interaction. "
             elif req["T"] == "GuildQuestCompleted":
                 other_quest_name = QuestList.find_quest_by_internalname(req["Quest"])["Name"]
-                self.prereq += " You must have previously completed [[%s]] in order to undertake this quest." % other_quest_name
+                self.prereq += "You must have previously completed [[%s]] in order to undertake this quest. " % other_quest_name
             elif req["T"] == "Or":
                 # Hopefully this is only used for event quests
                 self.notices.append("Or-Requirement needs manual check")
             elif req["T"] == "IsLongtimeAnimal":
-                self.prereq += " This quest is only available to long time animals."
+                self.prereq += "This quest is only available to long time animals. "
             else:
                 self.errors.append("Unknown requirement type " + req["T"])
-    
+
     def generate_wiki_source(self):
         self.errors = []
         data = QuestList.find_quest_by_name(self.name)
 
         try:
-            npc = NpcList.find_npc_by_ref(data["FavorNpc"])
+            if "FavorNpc" not in data or data["FavorNpc"] == "":
+                npc = None
+                area_alias = data["DisplayedLocation"] if "DisplayedLocation" in data else None
+                area_prefix = None
+            else:
+                npc = NpcList.find_npc_by_ref(data["FavorNpc"])
+                area = npc.area
+                area_alias = area.get_alias()
+                area_prefix = area.get_prefix()
         except KeyError:
             self.errors.append("NPC not found")
             npc = Npc(data["FavorNpc"], AreaList.find_by_areaname(data["DisplayedLocation"]))
-        area = npc.area
-        area_alias = area.get_alias()
-        area_prefix = area.get_prefix()
+            area = npc.area
+            area_alias = area.get_alias()
+            area_prefix = area.get_prefix()
+
         if "DisplayedLocation" in data:
             # Some areas have a good display location, some don't. Overwrite when we know it is nice.
             if data["DisplayedLocation"] == "Sacred Grotto":
@@ -78,6 +90,8 @@ class Quest:
                 pass  # Not sure what that is. I don't think we should display it.
             elif key == "GroupingName":
                 pass  # Tech value to group quests so you can only have one of the group. Like casino daily.
+            elif key == "Level":
+                pass  # Druid event, also NumExpectedParticipants
             elif key == "IsGuildQuest" or key == "NumExpectedParticipants" or key == "IsAutoWrapUp" or key == "IsAutoPreface" or key == "ReuseTime_Minutes":
                 pass  # Guild quest stuff
             elif key == "Keywords":
@@ -95,7 +109,9 @@ class Quest:
             elif key == "ReuseTime_Hours":
                 self.summary_extra += "This Quest can be repeated after {} hour{}.\n\n".format(data["ReuseTime_Hours"], '' if data["ReuseTime_Hours"] == 1 else 's')
             elif key == "Requirements":
-                if type(data["Requirements"][0]) is list:
+                if type(data["Requirements"]) is dict:
+                    self.requirements([data["Requirements"]])
+                elif type(data["Requirements"][0]) is list:
                     # This is a AND combination of sub-requirements
                     for item in data["Requirements"]:
                         self.requirements(item)
@@ -133,27 +149,35 @@ class Quest:
                 # Rewards is a list, maybe sometimes a dict?
                 for reward in data["Rewards"]:
                     if reward["T"] == "SkillXP" or reward["T"] == "SkillXp":  # Inconsistent uppercase
-                        self.rewards += "* {} XP in {}\n".format(reward["Xp"], reward["Skill"])
+                        self.rewards += "* {} XP in {}\n".format(reward["Xp"], SkillList.find_by_internalname(reward["Skill"]).name)
                     elif reward["T"] == "Recipe":
                         self.rewards += "* Recipe: {}\n".format(RecipeList.find_by_name(reward["Recipe"]).name)
                     elif reward["T"] == "GuildXp":
                         self.rewards += "* {} Guild XP\n".format(reward["Xp"])
                     elif reward["T"] == "GuildCredits":
                         self.rewards += "* {} Guild Credits\n".format(reward["Credits"])
+                    elif reward["T"] == "CombatXp":
+                        self.rewards += "* {} Combat XP for your active skills\n".format(reward["Xp"])
                     else:
                         self.errors.append("Unexpected reward type " + reward["T"])
             elif key == "Rewards_Effects":
                 self.notices.append("Special reward effect for quest {} must be handled manually".format(data["InternalName"]))
             elif key == "Rewards_NamedLootProfile":
                 self.rewards += "* random items\n"  # Special loot table for rewards
+            elif key == "Rewards_XP":
+                for item in data["Rewards_XP"]:
+                    self.rewards += "* {} XP in {}\n".format(data["Rewards_XP"][item], SkillList.find_by_internalname(item).name)
+            elif key == "FollowUpQuests":
+                pass # do we display these?
             else:
                 self.errors.append("Unhandled key {} in quest data".format(key))
 
         result = "__NOTOC__\n"
         result += self.summary + self.summary_extra
-    
-        result += "===Prerequisites===\n"
-        result += "To start this quest, talk to '''[[%s]]''' in %s'''[[%s]]'''." % (npc.get_name(), area_prefix, area_alias)
+
+        if npc:
+            result += "===Prerequisites===\n"
+            result += "To start this quest, talk to '''[[%s]]''' in %s'''[[%s]]'''." % (npc.get_name(), area_prefix, area_alias)
 
         result += self.prereq + "\n\n"
         result += self.preface
@@ -169,8 +193,10 @@ class Quest:
         result += self.rewards + "}}\n\n"
 
         result += "[[Category:Quests]]"
-        result += "[[Category:Quests/%s Quests]]" % area_alias
-        result += "[[Category:Quests/%s]]" % npc.get_name()
+        if area_alias:
+            result += "[[Category:Quests/%s Quests]]" % area_alias
+        if npc:
+            result += "[[Category:Quests/%s]]" % npc.get_name()
         return result + "\n"
 
     def get_errors(self):

@@ -66,12 +66,6 @@ def main(*args):
             if "WorkOrder" in quest["Keywords"]:
                 #pywikibot.output("Skipping work order quest")
                 continue
-        if not "FavorNpc" in quest:
-            pywikibot.output("Skipping quest without FavorNpc: {}".format(quest["Name"]))
-            continue
-        if quest["FavorNpc"] == "":
-            pywikibot.output("Skipping quest with empty FavorNpc: {}".format(quest["Name"]))
-            continue
 
         pywikibot.output('Loading %s...' % quest["Name"])
         page = pywikibot.Page(site, quest["Name"])

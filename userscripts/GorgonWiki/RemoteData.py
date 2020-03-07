@@ -119,6 +119,18 @@ class Recipe:
         self.name = data["Name"]
 
 
+class Skill:
+    def __init__(self, name, data):
+        self.name = data["Name"] if "Name" in data else name
+
+
+class SkillList:
+    @staticmethod
+    def find_by_internalname(name):
+        skills = Cdn().get_file("skills")
+        return Skill(name, skills[name])
+
+
 class QuestList:
     @staticmethod
     def find_quest_by_name(name):
