@@ -51,6 +51,8 @@ class Quest:
                 self.notices.append("Or-Requirement needs manual check")
             elif req["T"] == "IsLongtimeAnimal":
                 self.prereq += "This quest is only available to long time animals. "
+            elif req["T"] == "Race":
+                self.prereq += "This quest is only available to {}. ".format(req["AllowedRace"])
             else:
                 self.errors.append("Unknown requirement type " + req["T"])
 
@@ -177,7 +179,7 @@ class Quest:
 
         if npc:
             result += "===Prerequisites===\n"
-            result += "To start this quest, talk to '''[[%s]]''' in %s'''[[%s]]'''." % (npc.get_name(), area_prefix, area_alias)
+            result += "To start this quest, talk to '''[[%s]]''' in %s'''[[%s]]'''. " % (npc.get_name(), area_prefix, area_alias)
 
         result += self.prereq + "\n\n"
         result += self.preface
@@ -215,5 +217,7 @@ class Favor:
 class Skill:
     @staticmethod
     def get_alias(name):
+        if name == "Race_Fae":
+            return "Fae"
         return re.sub(r'(.)([A-Z])', r'\1 \2', name)
 
