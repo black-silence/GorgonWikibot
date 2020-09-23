@@ -220,6 +220,6 @@ class Skill:
     @staticmethod
     def get_alias(name):
         if name == "Race_Fae":
-            return "Fae"
+            return "Fae (Race Skill)"
         return re.sub(r'(.)([A-Z])', r'\1 \2', name)
 
