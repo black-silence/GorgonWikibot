@@ -45,7 +45,7 @@ def main(*args):
         quest_list = {"filtered": RemoteData.QuestList.find_quest_by_name(quest_filter)}
     else:
         quest_list = RemoteData.QuestList.get_all()
-    quest_blacklist = ["quest_1", "quest_2"]
+    quest_blacklist = ["quest_1", "quest_2", "quest_45425"]
 
     # Connect to API
     site = pywikibot.Site()
@@ -61,6 +61,9 @@ def main(*args):
 
         quest = quest_list[index]
 
+        if "Name" not in quest or quest["Name"] == "":
+            pywikibot.output('Skipping nameless quest %s...' % index)
+            continue
         if "Keywords" in quest:
             # Skip work orders
             if "WorkOrder" in quest["Keywords"]:
