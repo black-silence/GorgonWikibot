@@ -114,6 +114,16 @@ class Item:
         return internal
 
 
+class ItemList:
+    @staticmethod
+    def find_item_by_name(name):
+        items = Cdn().get_file("items")
+        for key in items:
+            if items[key]["Name"] == name:
+                return items[key]
+        return None
+
+
 class Recipe:
     def __init__(self, data):
         self.name = data["Name"]

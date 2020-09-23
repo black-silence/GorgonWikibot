@@ -67,8 +67,14 @@ def main(*args):
                 #pywikibot.output("Skipping work order quest")
                 continue
 
+        # Check if an item with the same name exists
+        if RemoteData.ItemList.find_item_by_name(quest["Name"]) is not None:
+            pagename = quest["Name"] + "_(Quest)"
+        else:
+            pagename = quest["Name"]
+
         pywikibot.output('Loading %s...' % quest["Name"])
-        page = pywikibot.Page(site, quest["Name"])
+        page = pywikibot.Page(site, pagename)
         if not page.exists():
             pywikibot.output("Missing page for quest {}".format(quest["Name"]))
             pywikibot.output("Current offset is {}".format(current_offset))
