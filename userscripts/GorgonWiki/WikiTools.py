@@ -32,6 +32,8 @@ class Quest:
                 self.prereq += "This quest is only available during a Civil Service event. "
             elif req["T"] == "HasEffectKeyword" and req["Keyword"] == "LiveEvent_BunFu":
                 self.prereq += "This quest is only available during a BunFu event. "
+            elif req["T"] == "HasEffectKeyword" and req["Keyword"] == "LiveEvent_LostScapegoats":
+                self.prereq += "This quest is only available during a Lost Scapegoats event. "
             elif req["T"] == "IsWarden":
                 self.prereq += "This quest is only available for Wardens. "
             elif req["T"] == "AreaEventOn":
