@@ -46,6 +46,7 @@ def main(*args):
     else:
         quest_list = RemoteData.QuestList.get_all()
     quest_blacklist = ["quest_1", "quest_2", "quest_45425"]
+    name_blacklist = ["Help the Hive"]
 
     # Connect to API
     site = pywikibot.Site()
@@ -63,6 +64,8 @@ def main(*args):
 
         if "Name" not in quest or quest["Name"] == "":
             pywikibot.output('Skipping nameless quest %s...' % index)
+            continue
+        elif quest["Name"] in name_blacklist:
             continue
         if "Keywords" in quest:
             # Skip work orders
