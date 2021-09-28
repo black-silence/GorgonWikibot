@@ -96,6 +96,8 @@ class Area:
             return self.name
         if self.id == "AreaKurCaves":
             return self.name
+        if self.id == "AreaFaeRealm1Caves":
+            return "Wintertide"
         return self.short_name
 
     def get_prefix(self):
