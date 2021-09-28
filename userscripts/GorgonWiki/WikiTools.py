@@ -41,6 +41,11 @@ class Quest:
             elif req["T"] == "AreaEventOn":
                 self.prereq += "This quest is only available during an event in the area. "
                 # check req["AreaEvent"]
+            elif req["T"] == "AreaEventOff":
+                if req["AreaEvent"] == "PovusNightlyQuest":
+                    self.prereq += "This quest is only available during daytime. "
+                else:
+                    self.prereq += "This quest is only available outside an event in the area. "
             elif req["T"] == "HangOutCompleted":
                 self.prereq += "This quest is only available after completing a hangout. "
                 # check req["HangOut"]
@@ -57,6 +62,11 @@ class Quest:
                 self.prereq += "This quest is only available to long time animals. "
             elif req["T"] == "Race":
                 self.prereq += "This quest is only available to {}. ".format(req["AllowedRace"])
+            elif req["T"] == "ScriptAtomicMatches":
+                if "AtomicVar" in req and req["AtomicVar"] == "PovusNightState":
+                    self.prereq += "This quest is only available at night. "
+                else:
+                    self.errors.append("Unknown requirement sub type " + req["T"])
             else:
                 self.errors.append("Unknown requirement type " + req["T"])
 
@@ -104,7 +114,7 @@ class Quest:
                 pass  # This might be interesting, but only used for guild quests atm?
             elif key == "RequirementsToSustain":
                 pass  # Probably used to auto-cancel quests after events like halloween
-            elif key == "PreGiveItems" or key == "PreGiveRecipes":
+            elif key == "PreGiveItems" or key == "PreGiveRecipes" or key == "PreGiveEffects":
                 pass
             elif key == "Description":
                 self.description(data[key])
@@ -164,6 +174,8 @@ class Quest:
                         self.rewards += "* {} Guild Credits\n".format(reward["Credits"])
                     elif reward["T"] == "CombatXp":
                         self.rewards += "* {} Combat XP for your active skills\n".format(reward["Xp"])
+                    elif reward["T"] == "Currency":
+                        self.rewards += "* {} {}\n".format(reward["Amount"], reward["Currency"])
                     else:
                         self.errors.append("Unexpected reward type " + reward["T"])
             elif key == "Rewards_Effects":
